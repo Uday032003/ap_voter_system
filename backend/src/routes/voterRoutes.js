@@ -7,16 +7,18 @@ import { requireRoles } from '../middleware/roleGuard.js';
 const router = express.Router();
 
 // GET /api/voters
-// Query params: constituencyId, partNumber, search, gender, minAge, maxAge, page, limit
+// Query params: constituencyId, partNumber, section, search, gender, minAge, maxAge, sortBy, page, limit
 router.get('/', authMiddleware, requireRoles('super_admin', 'leader', 'commoner'), async (req, res, next) => {
   try {
     const {
       constituencyId,
       partNumber,
+      section,
       search,
       gender,
       minAge,
       maxAge,
+      sortBy,
       page = 1,
       limit = 25
     } = req.query;
@@ -54,10 +56,12 @@ router.get('/', authMiddleware, requireRoles('super_admin', 'leader', 'commoner'
     const result = await dbService.queryVoters({
       constituencyId: targetConstituencyId,
       partNumber,
+      section,
       search,
       gender,
       minAge,
       maxAge,
+      sortBy,
       isPublicApprovedOnly: req.user.role === 'commoner',
       leaderId: req.user.role === 'leader' ? req.user.id : null,
       page: Number(page) || 1,
@@ -67,6 +71,21 @@ router.get('/', authMiddleware, requireRoles('super_admin', 'leader', 'commoner'
     res.json({
       success: true,
       ...result
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// GET /api/voters/sections
+// Query params: constituencyId, partNumber
+router.get('/sections', authMiddleware, requireRoles('super_admin', 'leader', 'commoner'), async (req, res, next) => {
+  try {
+    const { constituencyId, partNumber } = req.query;
+    const sections = await dbService.getSections(constituencyId, partNumber);
+    res.json({
+      success: true,
+      data: sections
     });
   } catch (err) {
     next(err);
