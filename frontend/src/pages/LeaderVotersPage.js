@@ -270,7 +270,7 @@ export default function LeaderVotersPage() {
       </div>
 
       {/* Constituency Selector Banner */}
-      <ConstituencySelector onSelectionConfirmed={handleConstituencyConfirmed} />
+      <ConstituencySelector currentConstituency={constituency} onSelectionConfirmed={handleConstituencyConfirmed} />
 
       {successMsg && (
         <div className="alert alert-success" style={{ marginBottom: '1.25rem' }}>
@@ -285,7 +285,7 @@ export default function LeaderVotersPage() {
       )}
 
       {/* While loading leader authorization status, show skeleton cards instead of "Approval Required" error */}
-      {loadingStats && !dashboardStats ? (
+      {loadingStats ? (
         <div style={{ marginTop: '1.5rem' }}>
           <VoterCardsSkeleton count={6} />
         </div>
@@ -411,7 +411,7 @@ export default function LeaderVotersPage() {
             </div>
           </div>
 
-          {/* Voter Card List - Exactly matches Image 2 (No horizontal scroll) */}
+          {/* Voter Card List - Exactly matches Image 2 with compact, small typography */}
           {loadingVoters ? (
             <VoterCardsSkeleton count={6} />
           ) : voters.length === 0 ? (
@@ -419,7 +419,7 @@ export default function LeaderVotersPage() {
               No voters found matching your criteria.
             </div>
           ) : (
-            <div className="voter-cards-container" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <div className="voter-cards-container" style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
               {voters.map((voter) => {
                 const isAdded = Boolean(voter.is_added || voter.is_marked);
                 const isMarking = Boolean(markingIds[voter.id]);
@@ -430,27 +430,26 @@ export default function LeaderVotersPage() {
                     className="leader-voter-card"
                     style={{
                       background: '#ffffff',
-                      border: isAdded ? '1.5px solid #86efac' : '1.5px solid #dbeafe',
-                      borderRadius: '16px',
-                      padding: '1.25rem',
+                      border: isAdded ? '1.5px solid #86efac' : '1px solid #bfdbfe',
+                      borderRadius: '14px',
+                      padding: '0.85rem 1rem',
                       boxShadow: isAdded 
-                        ? '0 4px 14px rgba(34, 197, 94, 0.12)' 
-                        : '0 4px 14px rgba(219, 234, 254, 0.45)',
+                        ? '0 2px 10px rgba(34, 197, 94, 0.12)' 
+                        : '0 2px 8px rgba(191, 219, 254, 0.35)',
                       position: 'relative',
-                      transition: 'all 0.2s ease'
+                      transition: 'all 0.15s ease'
                     }}
                   >
                     {/* Top Header Row: Serial Number (Left) and Voter ID Pill (Right) */}
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <div style={{
                         background: '#eff6ff',
-                        border: '1.5px solid #93c5fd',
-                        borderRadius: '8px',
-                        padding: '0.2rem 0.9rem',
+                        border: '1px solid #93c5fd',
+                        borderRadius: '6px',
+                        padding: '2px 10px',
                         color: '#1e40af',
-                        fontWeight: 800,
-                        fontSize: '1.25rem',
-                        letterSpacing: '0.5px'
+                        fontWeight: 700,
+                        fontSize: '0.95rem'
                       }}>
                         {voter.serial_number}
                       </div>
@@ -458,10 +457,10 @@ export default function LeaderVotersPage() {
                       <div style={{
                         background: '#e0e7ff',
                         color: '#1e1b4b',
-                        borderRadius: '8px',
-                        padding: '0.35rem 0.95rem',
+                        borderRadius: '6px',
+                        padding: '3px 10px',
                         fontWeight: 800,
-                        fontSize: '1.05rem',
+                        fontSize: '0.85rem',
                         letterSpacing: '0.5px'
                       }}>
                         {voter.voter_id || '—'}
@@ -472,37 +471,38 @@ export default function LeaderVotersPage() {
                     <div style={{
                       background: '#f8fafc',
                       border: '1px solid #e2e8f0',
-                      borderRadius: '10px',
-                      padding: '0.75rem 1rem',
-                      marginTop: '0.85rem',
+                      borderRadius: '8px',
+                      padding: '0.55rem 0.75rem',
+                      marginTop: '0.65rem',
                       display: 'flex',
                       alignItems: 'center',
-                      gap: '0.75rem'
+                      gap: '0.65rem'
                     }}>
                       <div style={{
-                        width: '36px',
-                        height: '36px',
+                        width: '28px',
+                        height: '28px',
+                        minWidth: '28px',
+                        minHeight: '28px',
                         background: '#e0f2fe',
                         color: '#0284c7',
-                        borderRadius: '8px',
+                        borderRadius: '6px',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
                         flexShrink: 0
                       }}>
-                        <User size={19} />
+                        <User size={15} />
                       </div>
-                      <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-                        <span style={{ color: '#475569', fontWeight: 600, fontSize: '0.92rem' }}>
-                          {isTelugu ? 'పేరు' : 'Name'}
+                      <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
+                        <span style={{ color: '#64748b', fontWeight: 600, fontSize: '0.8rem' }}>
+                          {isTelugu ? 'పేరు' : 'Name'} :
                         </span>
-                        <span style={{ color: '#94a3b8' }}>:</span>
-                        <span style={{ color: '#0f172a', fontWeight: 800, fontSize: '1.05rem', textTransform: 'uppercase' }}>
+                        <span style={{ color: '#0f172a', fontWeight: 800, fontSize: '0.88rem', textTransform: 'uppercase', letterSpacing: '0.2px' }}>
                           {voter.name_en || voter.name_te}
                         </span>
                         {voter.name_te && voter.name_en !== voter.name_te && (
-                          <span style={{ color: '#64748b', fontSize: '0.88rem', fontWeight: 600 }}>
-                            • {voter.name_te}
+                          <span style={{ color: '#64748b', fontSize: '0.78rem' }}>
+                            ({voter.name_te})
                           </span>
                         )}
                       </div>
@@ -511,45 +511,47 @@ export default function LeaderVotersPage() {
                     {/* Row 2: 2-Column Grid for Relative Name & House Number */}
                     <div style={{
                       display: 'grid',
-                      gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
-                      gap: '0.75rem',
-                      marginTop: '0.75rem'
+                      gridTemplateColumns: '1fr 1fr',
+                      gap: '0.6rem',
+                      marginTop: '0.6rem'
                     }}>
                       {/* Column 1: Relative Name */}
                       <div style={{
                         background: '#f8fafc',
                         border: '1px solid #e2e8f0',
-                        borderRadius: '10px',
-                        padding: '0.75rem',
+                        borderRadius: '8px',
+                        padding: '0.55rem 0.65rem',
                         display: 'flex',
                         alignItems: 'center',
-                        gap: '0.65rem'
+                        gap: '0.55rem'
                       }}>
                         <div style={{
-                          width: '34px',
-                          height: '34px',
+                          width: '28px',
+                          height: '28px',
+                          minWidth: '28px',
+                          minHeight: '28px',
                           background: '#e0f2fe',
                           color: '#0284c7',
-                          borderRadius: '8px',
+                          borderRadius: '6px',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
                           flexShrink: 0
                         }}>
-                          <Users size={17} />
+                          <Users size={15} />
                         </div>
                         <div style={{ minWidth: 0, flex: 1 }}>
-                          <div style={{ color: '#64748b', fontSize: '0.78rem', fontWeight: 600 }}>
+                          <div style={{ color: '#64748b', fontSize: '0.72rem', fontWeight: 600, lineHeight: 1.2 }}>
                             {getRelativeLabel(voter.relative_type, isTelugu)}
                           </div>
                           <div style={{
                             color: '#0f172a',
                             fontWeight: 800,
-                            fontSize: '0.95rem',
+                            fontSize: '0.82rem',
                             textTransform: 'uppercase',
-                            whiteSpace: 'nowrap',
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis'
+                            marginTop: '2px',
+                            wordBreak: 'break-word',
+                            lineHeight: 1.25
                           }}>
                             {voter.relative_name_en || voter.relative_name_te || '—'}
                           </div>
@@ -560,36 +562,37 @@ export default function LeaderVotersPage() {
                       <div style={{
                         background: '#f8fafc',
                         border: '1px solid #e2e8f0',
-                        borderRadius: '10px',
-                        padding: '0.75rem',
+                        borderRadius: '8px',
+                        padding: '0.55rem 0.65rem',
                         display: 'flex',
                         alignItems: 'center',
-                        gap: '0.65rem'
+                        gap: '0.55rem'
                       }}>
                         <div style={{
-                          width: '34px',
-                          height: '34px',
+                          width: '28px',
+                          height: '28px',
+                          minWidth: '28px',
+                          minHeight: '28px',
                           background: '#e0f2fe',
                           color: '#0284c7',
-                          borderRadius: '8px',
+                          borderRadius: '6px',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
                           flexShrink: 0
                         }}>
-                          <Home size={17} />
+                          <Home size={15} />
                         </div>
                         <div style={{ minWidth: 0, flex: 1 }}>
-                          <div style={{ color: '#64748b', fontSize: '0.78rem', fontWeight: 600 }}>
+                          <div style={{ color: '#64748b', fontSize: '0.72rem', fontWeight: 600, lineHeight: 1.2 }}>
                             {isTelugu ? 'డోర్ నంబర్' : 'House Number'}
                           </div>
                           <div style={{
                             color: '#0f172a',
                             fontWeight: 800,
-                            fontSize: '0.95rem',
-                            whiteSpace: 'nowrap',
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis'
+                            fontSize: '0.85rem',
+                            marginTop: '2px',
+                            lineHeight: 1.25
                           }}>
                             {voter.house_number || '—'}
                           </div>
@@ -600,38 +603,40 @@ export default function LeaderVotersPage() {
                     {/* Row 3: 2-Column Grid for Age & Gender */}
                     <div style={{
                       display: 'grid',
-                      gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
-                      gap: '0.75rem',
-                      marginTop: '0.75rem'
+                      gridTemplateColumns: '1fr 1fr',
+                      gap: '0.6rem',
+                      marginTop: '0.6rem'
                     }}>
                       {/* Column 1: Age */}
                       <div style={{
                         background: '#f8fafc',
                         border: '1px solid #e2e8f0',
-                        borderRadius: '10px',
-                        padding: '0.75rem',
+                        borderRadius: '8px',
+                        padding: '0.55rem 0.65rem',
                         display: 'flex',
                         alignItems: 'center',
-                        gap: '0.65rem'
+                        gap: '0.55rem'
                       }}>
                         <div style={{
-                          width: '34px',
-                          height: '34px',
+                          width: '28px',
+                          height: '28px',
+                          minWidth: '28px',
+                          minHeight: '28px',
                           background: '#e0f2fe',
                           color: '#0284c7',
-                          borderRadius: '8px',
+                          borderRadius: '6px',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
                           flexShrink: 0
                         }}>
-                          <Calendar size={17} />
+                          <Calendar size={15} />
                         </div>
                         <div>
-                          <div style={{ color: '#64748b', fontSize: '0.78rem', fontWeight: 600 }}>
+                          <div style={{ color: '#64748b', fontSize: '0.72rem', fontWeight: 600, lineHeight: 1.2 }}>
                             {isTelugu ? 'వయస్సు' : 'Age'}
                           </div>
-                          <div style={{ color: '#0f172a', fontWeight: 800, fontSize: '1rem' }}>
+                          <div style={{ color: '#0f172a', fontWeight: 800, fontSize: '0.85rem', marginTop: '2px', lineHeight: 1.25 }}>
                             {voter.age || '—'}
                           </div>
                         </div>
@@ -641,97 +646,96 @@ export default function LeaderVotersPage() {
                       <div style={{
                         background: '#f8fafc',
                         border: '1px solid #e2e8f0',
-                        borderRadius: '10px',
-                        padding: '0.75rem',
+                        borderRadius: '8px',
+                        padding: '0.55rem 0.65rem',
                         display: 'flex',
                         alignItems: 'center',
-                        gap: '0.65rem'
+                        gap: '0.55rem'
                       }}>
                         <div style={{
-                          width: '34px',
-                          height: '34px',
+                          width: '28px',
+                          height: '28px',
+                          minWidth: '28px',
+                          minHeight: '28px',
                           background: '#e0f2fe',
                           color: '#0284c7',
-                          borderRadius: '8px',
+                          borderRadius: '6px',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
                           flexShrink: 0
                         }}>
-                          <UserCheck size={17} />
+                          <UserCheck size={15} />
                         </div>
                         <div>
-                          <div style={{ color: '#64748b', fontSize: '0.78rem', fontWeight: 600 }}>
+                          <div style={{ color: '#64748b', fontSize: '0.72rem', fontWeight: 600, lineHeight: 1.2 }}>
                             {isTelugu ? 'లింగం' : 'Gender'}
                           </div>
-                          <div style={{ color: '#0f172a', fontWeight: 800, fontSize: '0.95rem' }}>
+                          <div style={{ color: '#0f172a', fontWeight: 800, fontSize: '0.85rem', marginTop: '2px', lineHeight: 1.25 }}>
                             {formatGender(voter.gender, isTelugu)}
                           </div>
                         </div>
                       </div>
                     </div>
 
-                    {/* Bottom Footer Row with Part Info, View Details, and Tick Button at Bottom Right */}
+                    {/* Bottom Footer Row with Part Info, View Details, and Whole Green Tick Button at Bottom Right */}
                     <div style={{
                       display: 'flex',
                       justifyContent: 'space-between',
                       alignItems: 'center',
-                      marginTop: '0.95rem',
-                      paddingTop: '0.75rem',
-                      borderTop: '1px dashed #e2e8f0',
-                      flexWrap: 'wrap',
-                      gap: '0.5rem'
+                      marginTop: '0.75rem',
+                      paddingTop: '0.55rem',
+                      borderTop: '1px dashed #e2e8f0'
                     }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
-                        <span style={{ fontSize: '0.82rem', color: '#64748b', fontWeight: 600 }}>
-                          {isTelugu ? 'పార్ట్ నం.' : 'Part'}:{' '}
-                          <strong style={{ color: '#0f172a' }}>{voter.part_number || '1'}</strong>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                        <span style={{ fontSize: '0.76rem', color: '#64748b', fontWeight: 600 }}>
+                          {isTelugu ? 'పార్ట్' : 'Part'}: <strong style={{ color: '#0f172a' }}>{voter.part_number || '1'}</strong>
                         </span>
-
+                        <span style={{ color: '#cbd5e1' }}>•</span>
                         <Link
                           to={`/leader/voters/${voter.id}`}
                           style={{
-                            fontSize: '0.8rem',
+                            fontSize: '0.76rem',
                             color: '#4f46e5',
                             fontWeight: 700,
                             display: 'inline-flex',
                             alignItems: 'center',
-                            gap: '0.25rem',
+                            gap: '0.2rem',
                             textDecoration: 'none'
                           }}
                         >
-                          <Eye size={14} />
-                          <span>{isTelugu ? 'పూర్తి వివరాలు' : 'View Full Details'}</span>
+                          <Eye size={13} />
+                          <span>{isTelugu ? 'వివరాలు' : 'View Full Details'}</span>
                         </Link>
                       </div>
 
-                      {/* Tick Button with Green Border at the Bottom Right of Container */}
+                      {/* Whole Green Tick Button */}
                       <button
                         type="button"
                         onClick={() => handleToggleAddVoter(voter)}
                         disabled={isMarking}
                         title={isAdded ? (isTelugu ? 'జాబితా నుండి తొలగించండి' : 'Remove from My List') : (isTelugu ? 'జాబితాలోకి చేర్చండి' : 'Add to My List')}
                         style={{
-                          width: '44px',
-                          height: '44px',
-                          minWidth: '44px',
-                          minHeight: '44px',
+                          width: '38px',
+                          height: '38px',
+                          minWidth: '38px',
+                          minHeight: '38px',
                           borderRadius: '10px',
-                          border: '2px solid #16a34a',
-                          background: isAdded ? '#16a34a' : '#ffffff',
-                          color: isAdded ? '#ffffff' : '#16a34a',
+                          border: 'none',
+                          background: isAdded ? '#15803d' : '#16a34a',
+                          color: '#ffffff',
                           display: 'inline-flex',
                           alignItems: 'center',
                           justifyContent: 'center',
                           cursor: isMarking ? 'not-allowed' : 'pointer',
-                          boxShadow: isAdded ? '0 3px 8px rgba(22, 163, 74, 0.35)' : '0 2px 4px rgba(0,0,0,0.04)',
+                          boxShadow: '0 2px 6px rgba(22, 163, 74, 0.35)',
                           transition: 'all 0.15s ease'
                         }}
                       >
                         {isMarking ? (
-                          <RefreshCw size={19} className="spin" color={isAdded ? '#ffffff' : '#16a34a'} />
+                          <RefreshCw size={17} className="spin" color="#ffffff" />
                         ) : (
-                          <Check size={22} strokeWidth={isAdded ? 3.2 : 2.6} />
+                          <Check size={20} strokeWidth={3} color="#ffffff" />
                         )}
                       </button>
                     </div>

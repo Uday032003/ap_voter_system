@@ -96,7 +96,7 @@ export default function LeaderDashboardPage() {
       )}
 
       {/* Access Status Banner */}
-      {loading && !stats ? (
+      {loading ? (
         <div className="card" style={{
           padding: '1.25rem 1.5rem',
           borderRadius: '14px',

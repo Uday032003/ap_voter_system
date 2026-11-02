@@ -4,9 +4,11 @@ import { useAuth } from '../../context/AuthContext.js';
 import { api } from '../../services/api.js';
 import { MapPin, Edit3, CheckCircle2, AlertCircle, ChevronRight, Layers } from 'lucide-react';
 
-export default function ConstituencySelector({ onSelectionConfirmed, showBannerOnly = false }) {
+export default function ConstituencySelector({ onSelectionConfirmed, showBannerOnly = false, currentConstituency = null }) {
   const { t, i18n } = useTranslation();
   const { user, selectedConstituency, setSelectedConstituency, refreshUserSelection, loadingSelection } = useAuth();
+
+  const effectiveConstituency = currentConstituency || selectedConstituency;
 
   const [districts, setDistricts] = useState([]);
   const [assemblies, setAssemblies] = useState([]);
@@ -114,7 +116,7 @@ export default function ConstituencySelector({ onSelectionConfirmed, showBannerO
   };
 
   // While determining user selection on initial load, show a compact skeleton banner to avoid flashing the edit form
-  if (loadingSelection && !selectedConstituency) {
+  if ((loadingSelection || loading) && !effectiveConstituency) {
     return (
       <div className="card" style={{
         marginBottom: '1.25rem',
@@ -136,7 +138,7 @@ export default function ConstituencySelector({ onSelectionConfirmed, showBannerO
   }
 
   // If user has a saved selection and we are not in editing mode, show the active banner with "Edit Selection"
-  if (selectedConstituency && !isEditing) {
+  if (effectiveConstituency && !isEditing) {
     return (
       <div className="card active-constituency-banner" style={{
         marginBottom: '1.25rem',
@@ -169,11 +171,11 @@ export default function ConstituencySelector({ onSelectionConfirmed, showBannerO
               {t('constituency.current_selection', 'Selected Constituency')} • AP
             </div>
             <div style={{ fontSize: 'clamp(0.88rem, 2.5vw, 1.05rem)', fontWeight: 700, color: '#1e1b4b', display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '0.35rem' }}>
-              <span>{isTelugu && selectedConstituency.district_name_te ? selectedConstituency.district_name_te : selectedConstituency.district_name_en}</span>
+              <span>{isTelugu && effectiveConstituency.district_name_te ? effectiveConstituency.district_name_te : effectiveConstituency.district_name_en}</span>
               <ChevronRight size={14} color="#6366f1" />
-              <span>{isTelugu && selectedConstituency.assembly_name_te ? selectedConstituency.assembly_name_te : selectedConstituency.assembly_name_en}</span>
+              <span>{isTelugu && effectiveConstituency.assembly_name_te ? effectiveConstituency.assembly_name_te : effectiveConstituency.assembly_name_en}</span>
               <ChevronRight size={14} color="#6366f1" />
-              <span style={{ color: '#4338ca' }}>{isTelugu && selectedConstituency.name_te ? selectedConstituency.name_te : selectedConstituency.name_en}</span>
+              <span style={{ color: '#4338ca' }}>{isTelugu && effectiveConstituency.name_te ? effectiveConstituency.name_te : effectiveConstituency.name_en}</span>
             </div>
           </div>
         </div>
