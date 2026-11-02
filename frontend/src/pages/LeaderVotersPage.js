@@ -724,33 +724,45 @@ export default function LeaderVotersPage() {
                         </Link>
                       </div>
 
-                      {/* Whole Green Tick Button */}
+                      {/* Add / Remove Action Button */}
                       <button
                         type="button"
                         onClick={() => handleToggleAddVoter(voter)}
                         disabled={isMarking}
-                        title={isAdded ? (isTelugu ? 'జాబితా నుండి తొలగించండి' : 'Remove from My List') : (isTelugu ? 'జాబితాలోకి చేర్చండి' : 'Add to My List')}
                         style={{
-                          width: '32px',
-                          height: '32px',
-                          minWidth: '32px',
-                          minHeight: '32px',
-                          borderRadius: '8px',
+                          height: '28px',
+                          padding: '0 0.65rem',
+                          borderRadius: '6px',
                           border: 'none',
-                          background: isAdded ? '#15803d' : '#16a34a',
+                          background: isAdded
+                            ? (isMarking ? '#b91c1c' : '#dc2626')
+                            : (isMarking ? '#15803d' : '#16a34a'),
                           color: '#ffffff',
                           display: 'inline-flex',
                           alignItems: 'center',
-                          justifyContent: 'center',
+                          gap: '0.3rem',
                           cursor: isMarking ? 'not-allowed' : 'pointer',
-                          boxShadow: '0 2px 5px rgba(22, 163, 74, 0.35)',
+                          fontSize: '0.72rem',
+                          fontWeight: 700,
+                          boxShadow: isAdded
+                            ? '0 1px 4px rgba(220, 38, 38, 0.3)'
+                            : '0 1px 4px rgba(22, 163, 74, 0.3)',
                           transition: 'all 0.15s ease'
                         }}
                       >
                         {isMarking ? (
-                          <RefreshCw size={15} className="spin" color="#ffffff" />
+                          <>
+                            <RefreshCw size={11} className="spin" color="#ffffff" />
+                            <span>
+                              {isAdded
+                                ? (isTelugu ? 'తొలగిస్తోంది...' : 'Removing...')
+                                : (isTelugu ? 'చేరుస్తోంది...' : 'Adding...')}
+                            </span>
+                          </>
+                        ) : isAdded ? (
+                          <span>{isTelugu ? 'తొలగించండి' : 'Remove'}</span>
                         ) : (
-                          <Check size={18} strokeWidth={3} color="#ffffff" />
+                          <span>{isTelugu ? 'చేర్చండి' : 'Add'}</span>
                         )}
                       </button>
                     </div>
