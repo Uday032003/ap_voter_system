@@ -206,13 +206,6 @@ export const api = {
     return handleResponse(res);
   },
 
-  async getSections(params = {}) {
-    const query = new URLSearchParams(params).toString();
-    const qStr = query ? `?${query}` : '';
-    const res = await fetch(`${API_BASE}/voters/sections${qStr}`, { headers: getAuthHeaders() });
-    return handleResponse(res);
-  },
-
   async getVoter(id) {
     const res = await fetch(`${API_BASE}/voters/${id}`, { headers: getAuthHeaders() });
     return handleResponse(res);

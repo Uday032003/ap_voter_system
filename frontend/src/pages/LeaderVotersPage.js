@@ -78,9 +78,6 @@ export default function LeaderVotersPage() {
   const [search, setSearch] = useState('');
   const [gender, setGender] = useState('');
   const [partNumber, setPartNumber] = useState('');
-  const [selectedSection, setSelectedSection] = useState('');
-  const [sortBy, setSortBy] = useState('serial');
-  const [sections, setSections] = useState([]);
 
   // Ticking / Add to list tracking
   const [markingIds, setMarkingIds] = useState({});
@@ -96,23 +93,6 @@ export default function LeaderVotersPage() {
   const isTelugu = i18n.language === 'te';
 
   const activeConstituencyId = selectedConstituency?.id || dashboardStats?.constituency?.id;
-
-  const loadSections = async (constituencyId = activeConstituencyId) => {
-    try {
-      const res = await api.getSections({ constituencyId });
-      if (res.success) {
-        setSections(res.data || []);
-      }
-    } catch (e) {
-      console.warn('Failed to load sections:', e);
-    }
-  };
-
-  useEffect(() => {
-    if (activeConstituencyId) {
-      loadSections(activeConstituencyId);
-    }
-  }, [activeConstituencyId]);
 
   const loadVoters = async (targetPage = 1, constituencyId = activeConstituencyId) => {
     const targetId = constituencyId || activeConstituencyId;
@@ -130,8 +110,6 @@ export default function LeaderVotersPage() {
       if (search.trim()) params.search = search.trim();
       if (gender) params.gender = gender;
       if (partNumber.trim()) params.partNumber = partNumber.trim();
-      if (selectedSection.trim()) params.section = selectedSection.trim();
-      if (sortBy) params.sortBy = sortBy;
 
       const res = await api.getVoters(params);
       if (res.success) {
@@ -369,8 +347,8 @@ export default function LeaderVotersPage() {
         <>
           {/* Search & Filter Bar */}
           <div className="card" style={{ padding: '1rem 1.25rem', borderRadius: '14px', border: '1px solid #e2e8f0', marginBottom: '1.5rem' }}>
-            <form onSubmit={(e) => { e.preventDefault(); loadVoters(1); }} style={{ display: 'flex', gap: '0.65rem', flexWrap: 'wrap', alignItems: 'center' }}>
-              <div style={{ flex: '1 1 200px', position: 'relative' }}>
+            <form onSubmit={(e) => { e.preventDefault(); loadVoters(1); }} style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', alignItems: 'center' }}>
+              <div style={{ flex: '1 1 240px', position: 'relative' }}>
                 <input
                   type="text"
                   className="form-control"
@@ -382,27 +360,7 @@ export default function LeaderVotersPage() {
                 <Search size={16} style={{ position: 'absolute', left: '0.85rem', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
               </div>
 
-              {/* Section Filter Dropdown */}
-              <div style={{ minWidth: '150px', flex: '1 1 150px' }}>
-                <select className="form-control" value={selectedSection} onChange={(e) => setSelectedSection(e.target.value)}>
-                  <option value="">{isTelugu ? 'విభాగం (అన్నీ)' : 'All Sections'}</option>
-                  {sections.map((sec) => (
-                    <option key={sec.section_name_en} value={sec.section_name_en}>
-                      {isTelugu && sec.section_name_te ? sec.section_name_te : sec.section_name_en} ({sec.voter_count})
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Sort By Dropdown */}
-              <div style={{ width: '135px' }}>
-                <select className="form-control" value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
-                  <option value="serial">{isTelugu ? 'వరుస సంఖ్య' : 'Sort: Sl. No'}</option>
-                  <option value="section">{isTelugu ? 'విభాగం ప్రకారం' : 'Sort: Section'}</option>
-                </select>
-              </div>
-
-              <div style={{ width: '115px' }}>
+              <div style={{ width: '130px' }}>
                 <select className="form-control" value={gender} onChange={(e) => setGender(e.target.value)}>
                   <option value="">{isTelugu ? 'లింగం (అన్నీ)' : 'All Genders'}</option>
                   <option value="M">Male (M)</option>
@@ -411,7 +369,7 @@ export default function LeaderVotersPage() {
                 </select>
               </div>
 
-              <div style={{ width: '100px' }}>
+              <div style={{ width: '120px' }}>
                 <input
                   type="text"
                   className="form-control"
@@ -421,11 +379,11 @@ export default function LeaderVotersPage() {
                 />
               </div>
 
-              <button type="submit" className="btn btn-primary" style={{ padding: '0.55rem 1.1rem' }}>
+              <button type="submit" className="btn btn-primary" style={{ padding: '0.55rem 1.25rem' }}>
                 {isTelugu ? 'శోధించండి' : 'Search'}
               </button>
 
-              {(search || gender || partNumber || selectedSection || sortBy !== 'serial') && (
+              {(search || gender || partNumber) && (
                 <button
                   type="button"
                   className="btn btn-secondary"
@@ -433,8 +391,6 @@ export default function LeaderVotersPage() {
                     setSearch('');
                     setGender('');
                     setPartNumber('');
-                    setSelectedSection('');
-                    setSortBy('serial');
                     loadVoters(1);
                   }}
                 >
@@ -483,12 +439,12 @@ export default function LeaderVotersPage() {
                     className="leader-voter-card"
                     style={{
                       background: '#ffffff',
-                      border: isAdded ? '1.5px solid #16a34a' : '1px solid #bbf7d0',
+                      border: isAdded ? '1.5px solid #86efac' : '1px solid #bfdbfe',
                       borderRadius: '12px',
                       padding: '0.55rem 0.75rem',
                       boxShadow: isAdded 
-                        ? '0 2px 8px rgba(22, 163, 74, 0.18)' 
-                        : '0 1px 5px rgba(34, 197, 94, 0.12)',
+                        ? '0 2px 8px rgba(34, 197, 94, 0.12)' 
+                        : '0 1px 5px rgba(191, 219, 254, 0.28)',
                       position: 'relative',
                       transition: 'all 0.15s ease'
                     }}
@@ -496,11 +452,11 @@ export default function LeaderVotersPage() {
                     {/* Top Header Row: Serial Number (Left) and Voter ID Pill (Right) */}
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <div style={{
-                        background: '#f0fdf4',
-                        border: '1px solid #86efac',
+                        background: '#eff6ff',
+                        border: '1px solid #93c5fd',
                         borderRadius: '5px',
                         padding: '1px 7px',
-                        color: '#15803d',
+                        color: '#1e40af',
                         fontWeight: 700,
                         fontSize: '0.8rem',
                         lineHeight: 1.3
@@ -509,9 +465,8 @@ export default function LeaderVotersPage() {
                       </div>
 
                       <div style={{
-                        background: '#ecfdf5',
-                        border: '1px solid #a7f3d0',
-                        color: '#065f46',
+                        background: '#e0e7ff',
+                        color: '#1e1b4b',
                         borderRadius: '5px',
                         padding: '2px 8px',
                         fontWeight: 800,
@@ -523,7 +478,7 @@ export default function LeaderVotersPage() {
                       </div>
                     </div>
 
-                    {/* Row 1: Name Box with User Icon (Compact, theme green icon) */}
+                    {/* Row 1: Name Box with User Icon (Compact, ~half height) */}
                     <div style={{
                       background: '#f8fafc',
                       border: '1px solid #e2e8f0',
@@ -539,15 +494,15 @@ export default function LeaderVotersPage() {
                         height: '20px',
                         minWidth: '20px',
                         minHeight: '20px',
-                        background: '#dcfce7',
-                        color: '#15803d',
+                        background: '#e0f2fe',
+                        color: '#0284c7',
                         borderRadius: '5px',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
                         flexShrink: 0
                       }}>
-                        <User size={12} color="#15803d" />
+                        <User size={12} />
                       </div>
                       <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
                         <span style={{ color: '#64748b', fontWeight: 600, fontSize: '0.68rem', whiteSpace: 'nowrap' }}>
@@ -568,7 +523,7 @@ export default function LeaderVotersPage() {
                       </div>
                     </div>
 
-                    {/* Row 2: 2-Column Grid for Relative Name & House Number (Theme green icons) */}
+                    {/* Row 2: 2-Column Grid for Relative Name & House Number (Compact, ~half height) */}
                     <div style={{
                       display: 'grid',
                       gridTemplateColumns: '1fr 1fr',
@@ -590,15 +545,15 @@ export default function LeaderVotersPage() {
                           height: '20px',
                           minWidth: '20px',
                           minHeight: '20px',
-                          background: '#dcfce7',
-                          color: '#15803d',
+                          background: '#e0f2fe',
+                          color: '#0284c7',
                           borderRadius: '5px',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
                           flexShrink: 0
                         }}>
-                          <Users size={12} color="#15803d" />
+                          <Users size={12} />
                         </div>
                         <div style={{ minWidth: 0, flex: 1 }}>
                           <div style={{ color: '#64748b', fontSize: '0.60rem', fontWeight: 600, lineHeight: 1.1 }}>
@@ -633,15 +588,15 @@ export default function LeaderVotersPage() {
                           height: '20px',
                           minWidth: '20px',
                           minHeight: '20px',
-                          background: '#dcfce7',
-                          color: '#15803d',
+                          background: '#e0f2fe',
+                          color: '#0284c7',
                           borderRadius: '5px',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
                           flexShrink: 0
                         }}>
-                          <Home size={12} color="#15803d" />
+                          <Home size={12} />
                         </div>
                         <div style={{ minWidth: 0, flex: 1 }}>
                           <div style={{ color: '#64748b', fontSize: '0.60rem', fontWeight: 600, lineHeight: 1.1 }}>
@@ -660,7 +615,7 @@ export default function LeaderVotersPage() {
                       </div>
                     </div>
 
-                    {/* Row 3: 2-Column Grid for Age & Gender (Theme green icons) */}
+                    {/* Row 3: 2-Column Grid for Age & Gender (Compact, ~half height) */}
                     <div style={{
                       display: 'grid',
                       gridTemplateColumns: '1fr 1fr',
@@ -682,15 +637,15 @@ export default function LeaderVotersPage() {
                           height: '20px',
                           minWidth: '20px',
                           minHeight: '20px',
-                          background: '#dcfce7',
-                          color: '#15803d',
+                          background: '#e0f2fe',
+                          color: '#0284c7',
                           borderRadius: '5px',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
                           flexShrink: 0
                         }}>
-                          <Calendar size={12} color="#15803d" />
+                          <Calendar size={12} />
                         </div>
                         <div>
                           <div style={{ color: '#64748b', fontSize: '0.60rem', fontWeight: 600, lineHeight: 1.1 }}>
@@ -717,15 +672,15 @@ export default function LeaderVotersPage() {
                           height: '20px',
                           minWidth: '20px',
                           minHeight: '20px',
-                          background: '#dcfce7',
-                          color: '#15803d',
+                          background: '#e0f2fe',
+                          color: '#0284c7',
                           borderRadius: '5px',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
                           flexShrink: 0
                         }}>
-                          <UserCheck size={12} color="#15803d" />
+                          <UserCheck size={12} />
                         </div>
                         <div>
                           <div style={{ color: '#64748b', fontSize: '0.60rem', fontWeight: 600, lineHeight: 1.1 }}>
@@ -738,45 +693,25 @@ export default function LeaderVotersPage() {
                       </div>
                     </div>
 
-                    {/* Bottom Footer Row with Part Info, Section Badge, View Details, and Action Button */}
+                    {/* Bottom Footer Row with Part Info, View Details, and Whole Green Tick Button at Bottom Right */}
                     <div style={{
                       display: 'flex',
                       justifyContent: 'space-between',
                       alignItems: 'center',
                       marginTop: '0.45rem',
                       paddingTop: '0.4rem',
-                      borderTop: '1px dashed #e2e8f0',
-                      flexWrap: 'wrap',
-                      gap: '0.35rem'
+                      borderTop: '1px dashed #e2e8f0'
                     }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                         <span style={{ fontSize: '0.68rem', color: '#64748b', fontWeight: 600 }}>
                           {isTelugu ? 'పార్ట్' : 'Part'}: <strong style={{ color: '#0f172a' }}>{voter.part_number || '1'}</strong>
                         </span>
-
-                        {(voter.section_name_en || voter.section_name_te) && (
-                          <>
-                            <span style={{ color: '#cbd5e1' }}>•</span>
-                            <span style={{
-                              fontSize: '0.65rem',
-                              color: '#15803d',
-                              background: '#f0fdf4',
-                              border: '1px solid #bbf7d0',
-                              padding: '1px 5px',
-                              borderRadius: '4px',
-                              fontWeight: 600
-                            }}>
-                              {isTelugu && voter.section_name_te ? voter.section_name_te : voter.section_name_en}
-                            </span>
-                          </>
-                        )}
-
                         <span style={{ color: '#cbd5e1' }}>•</span>
                         <Link
                           to={`/leader/voters/${voter.id}`}
                           style={{
                             fontSize: '0.68rem',
-                            color: '#15803d',
+                            color: '#4f46e5',
                             fontWeight: 700,
                             display: 'inline-flex',
                             alignItems: 'center',
@@ -784,7 +719,7 @@ export default function LeaderVotersPage() {
                             textDecoration: 'none'
                           }}
                         >
-                          <Eye size={12} color="#15803d" />
+                          <Eye size={12} />
                           <span>{isTelugu ? 'వివరాలు' : 'View Full Details'}</span>
                         </Link>
                       </div>

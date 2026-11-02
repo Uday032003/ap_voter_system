@@ -858,44 +858,13 @@ export const dbService = {
   // ==========================================
   // 7. NEUTRAL MASTER VOTER ROLL
   // ==========================================
-  async getSections(constituencyId = null, partNumber = null) {
-    if (hasPool()) {
-      const conditions = ['v.section_name_en IS NOT NULL', "v.section_name_en != ''"];
-      const values = [];
-      let idx = 1;
-      if (constituencyId) {
-        conditions.push(`v.mptc_village_constituency_id = $${idx++}`);
-        values.push(constituencyId);
-      }
-      if (partNumber) {
-        conditions.push(`v.part_number = $${idx++}`);
-        values.push(String(partNumber));
-      }
-      const query = `
-        SELECT 
-          v.section_name_en, 
-          COALESCE(v.section_name_te, v.section_name_en) as section_name_te,
-          COUNT(*)::int as voter_count
-        FROM voters v
-        WHERE ${conditions.join(' AND ')}
-        GROUP BY v.section_name_en, v.section_name_te
-        ORDER BY v.section_name_en ASC
-      `;
-      const { rows } = await pool.query(query, values);
-      return rows;
-    }
-    return [];
-  },
-
   async queryVoters({
     constituencyId,
     partNumber,
-    section,
     search,
     gender,
     minAge,
     maxAge,
-    sortBy = 'serial',
     leaderId = null,
     isPublicApprovedOnly = false,
     page = 1,
@@ -916,11 +885,6 @@ export const dbService = {
       if (partNumber) {
         conditions.push(`v.part_number = $${paramIdx++}`);
         values.push(String(partNumber));
-      }
-      if (section && section.trim()) {
-        conditions.push(`(v.section_name_en = $${paramIdx} OR v.section_name_te = $${paramIdx})`);
-        values.push(section.trim());
-        paramIdx++;
       }
       if (gender) {
         conditions.push(`v.gender = $${paramIdx++}`);
@@ -967,17 +931,13 @@ export const dbService = {
       values.push(offset);
       const offsetParam = `$${paramIdx++}`;
 
-      const orderClause = sortBy === 'section'
-        ? 'ORDER BY v.section_name_en ASC NULLS LAST, v.serial_number ASC'
-        : 'ORDER BY v.part_number ASC, v.serial_number ASC';
-
       const dataQuery = `
         SELECT v.*,
                ${leaderSelect}
         FROM voters v
         ${leaderJoin}
         ${whereClause}
-        ${orderClause}
+        ORDER BY v.part_number ASC, v.serial_number ASC
         LIMIT ${limitParam} OFFSET ${offsetParam}
       `;
 
