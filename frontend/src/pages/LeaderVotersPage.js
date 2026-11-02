@@ -26,8 +26,15 @@ export default function LeaderVotersPage() {
   const { t, i18n } = useTranslation();
   const { user } = useAuth();
 
-  const [dashboardStats, setDashboardStats] = useState(null);
-  const [loadingStats, setLoadingStats] = useState(true);
+  const [dashboardStats, setDashboardStats] = useState(() => {
+    try {
+      const saved = sessionStorage.getItem('ap_voters_leader_stats');
+      return saved ? JSON.parse(saved) : null;
+    } catch (e) {
+      return null;
+    }
+  });
+  const [loadingStats, setLoadingStats] = useState(!dashboardStats);
 
   // Directory state
   const [voters, setVoters] = useState([]);
@@ -59,6 +66,9 @@ export default function LeaderVotersPage() {
       const res = await api.getLeaderDashboardStats();
       if (res.success) {
         setDashboardStats(res.data);
+        try {
+          sessionStorage.setItem('ap_voters_leader_stats', JSON.stringify(res.data));
+        } catch (e) {}
         if (res.data.accessStatus === 'approved' && res.data.constituency) {
           loadVoters(1, res.data.constituency.id);
         }
@@ -213,8 +223,12 @@ export default function LeaderVotersPage() {
         </div>
       )}
 
-      {/* If Access is NOT approved, block protected directory and show status */}
-      {accessStatus !== 'approved' ? (
+      {/* While loading leader authorization status, show skeleton instead of "Approval Required" error cards */}
+      {loadingStats && !dashboardStats ? (
+        <div style={{ marginTop: '1.5rem' }}>
+          <VoterTableSkeleton count={8} />
+        </div>
+      ) : accessStatus !== 'approved' ? (
         <div className="card" style={{
           padding: '2.5rem 1.5rem',
           borderRadius: '16px',

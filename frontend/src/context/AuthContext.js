@@ -13,14 +13,22 @@ export function AuthProvider({ children }) {
     }
   });
   const [token, setToken] = useState(localStorage.getItem('ap_voters_token') || null);
-  const [selectedConstituency, setSelectedConstituency] = useState(null);
+  const [selectedConstituency, setSelectedConstituency] = useState(() => {
+    try {
+      const saved = localStorage.getItem('ap_voters_selected_constituency');
+      return saved ? JSON.parse(saved) : null;
+    } catch (e) {
+      return null;
+    }
+  });
+  const [loadingSelection, setLoadingSelection] = useState(!selectedConstituency);
   const [loading, setLoading] = useState(!user && !!token);
 
   const refreshUserSelection = async () => {
     try {
       const res = await api.getUserConstituencySelection();
       if (res.success && res.data) {
-        setSelectedConstituency({
+        const sel = {
           id: res.data.mptc_village_constituency_id,
           name_en: res.data.mptc_name_en,
           name_te: res.data.mptc_name_te,
@@ -28,10 +36,17 @@ export function AuthProvider({ children }) {
           assembly_name_te: res.data.assembly_name_te,
           district_name_en: res.data.district_name_en,
           district_name_te: res.data.district_name_te
-        });
+        };
+        setSelectedConstituency(sel);
+        localStorage.setItem('ap_voters_selected_constituency', JSON.stringify(sel));
+      } else if (!res.data) {
+        setSelectedConstituency(null);
+        localStorage.removeItem('ap_voters_selected_constituency');
       }
     } catch (e) {
       // not critical if fails or not set yet
+    } finally {
+      setLoadingSelection(false);
     }
   };
 
@@ -89,6 +104,8 @@ export function AuthProvider({ children }) {
   const logout = () => {
     localStorage.removeItem('ap_voters_token');
     localStorage.removeItem('ap_voters_user');
+    localStorage.removeItem('ap_voters_selected_constituency');
+    sessionStorage.removeItem('ap_voters_leader_stats');
     setToken(null);
     setUser(null);
     setSelectedConstituency(null);
@@ -102,6 +119,7 @@ export function AuthProvider({ children }) {
         selectedConstituency,
         setSelectedConstituency,
         refreshUserSelection,
+        loadingSelection,
         loading,
         login,
         register,

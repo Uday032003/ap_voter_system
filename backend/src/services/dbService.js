@@ -539,6 +539,17 @@ export const dbService = {
         targetConstituencyId = approved[0]?.id || null;
       }
 
+      if (!targetConstituencyId) {
+        const lastReq = await pool.query(`
+          SELECT mptc_village_constituency_id, status FROM leader_access_requests
+          WHERE leader_id = $1
+          ORDER BY created_at DESC LIMIT 1
+        `, [leaderId]);
+        if (lastReq.rows.length > 0) {
+          targetConstituencyId = lastReq.rows[0].mptc_village_constituency_id;
+        }
+      }
+
       let constituency = null;
       let accessStatus = 'none';
 

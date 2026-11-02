@@ -21,8 +21,15 @@ export default function LeaderDashboardPage() {
   const { t, i18n } = useTranslation();
   const { user } = useAuth();
 
-  const [stats, setStats] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState(() => {
+    try {
+      const saved = sessionStorage.getItem('ap_voters_leader_stats');
+      return saved ? JSON.parse(saved) : null;
+    } catch (e) {
+      return null;
+    }
+  });
+  const [loading, setLoading] = useState(!stats);
   const [error, setError] = useState(null);
 
   const isTelugu = i18n.language === 'te';
@@ -34,6 +41,9 @@ export default function LeaderDashboardPage() {
       const res = await api.getLeaderDashboardStats();
       if (res.success) {
         setStats(res.data);
+        try {
+          sessionStorage.setItem('ap_voters_leader_stats', JSON.stringify(res.data));
+        } catch (e) {}
       }
     } catch (err) {
       setError(err.message || 'Failed to fetch Leader dashboard statistics.');
@@ -86,59 +96,78 @@ export default function LeaderDashboardPage() {
       )}
 
       {/* Access Status Banner */}
-      <div className="card" style={{
-        padding: '1.25rem 1.5rem',
-        borderRadius: '14px',
-        marginBottom: '1.75rem',
-        background: accessStatus === 'approved' ? '#f0fdf4' : accessStatus === 'pending' ? '#fffbeb' : '#f8fafc',
-        border: `1px solid ${accessStatus === 'approved' ? '#bbf7d0' : accessStatus === 'pending' ? '#fde68a' : '#e2e8f0'}`,
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        flexWrap: 'wrap',
-        gap: '1rem'
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          <div style={{
-            width: '42px',
-            height: '42px',
-            borderRadius: '10px',
-            background: accessStatus === 'approved' ? '#16a34a' : accessStatus === 'pending' ? '#d97706' : '#64748b',
-            color: '#fff',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center'
-          }}>
-            {accessStatus === 'approved' ? <CheckCircle2 size={22} /> : accessStatus === 'pending' ? <Clock size={22} /> : <AlertCircle size={22} />}
-          </div>
-          <div>
-            <div style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', color: '#64748b' }}>
-              {isTelugu ? 'అనుమతి స్థితి' : 'Access Authorization Status'}
-            </div>
-            <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0f172a' }}>
-              {accessStatus === 'approved' ? (
-                <span style={{ color: '#15803d' }}>
-                  {isTelugu ? 'ఆమోదించబడింది (Active Approval)' : 'Approved & Active'}
-                </span>
-              ) : accessStatus === 'pending' ? (
-                <span style={{ color: '#b45309' }}>
-                  {isTelugu ? 'అడ్మిన్ ఆమోదం కోసం పెండింగ్‌లో ఉంది' : 'Pending Super Admin Review'}
-                </span>
-              ) : (
-                <span style={{ color: '#64748b' }}>
-                  {isTelugu ? 'అనుమతి కేటాయించబడలేదు' : 'No Active Assignment'}
-                </span>
-              )}
-            </div>
+      {loading && !stats ? (
+        <div className="card" style={{
+          padding: '1.25rem 1.5rem',
+          borderRadius: '14px',
+          marginBottom: '1.75rem',
+          background: '#f8fafc',
+          border: '1px solid #e2e8f0',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.75rem'
+        }}>
+          <div className="skeleton-box" style={{ width: '42px', height: '42px', borderRadius: '10px' }} />
+          <div style={{ flex: 1 }}>
+            <div className="skeleton-box" style={{ width: '130px', height: '14px', marginBottom: '8px' }} />
+            <div className="skeleton-box" style={{ width: '220px', height: '22px' }} />
           </div>
         </div>
+      ) : (
+        <div className="card" style={{
+          padding: '1.25rem 1.5rem',
+          borderRadius: '14px',
+          marginBottom: '1.75rem',
+          background: accessStatus === 'approved' ? '#f0fdf4' : accessStatus === 'pending' ? '#fffbeb' : '#f8fafc',
+          border: `1px solid ${accessStatus === 'approved' ? '#bbf7d0' : accessStatus === 'pending' ? '#fde68a' : '#e2e8f0'}`,
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: '1rem'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <div style={{
+              width: '42px',
+              height: '42px',
+              borderRadius: '10px',
+              background: accessStatus === 'approved' ? '#16a34a' : accessStatus === 'pending' ? '#d97706' : '#64748b',
+              color: '#fff',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}>
+              {accessStatus === 'approved' ? <CheckCircle2 size={22} /> : accessStatus === 'pending' ? <Clock size={22} /> : <AlertCircle size={22} />}
+            </div>
+            <div>
+              <div style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', color: '#64748b' }}>
+                {isTelugu ? 'అనుమతి స్థితి' : 'Access Authorization Status'}
+              </div>
+              <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0f172a' }}>
+                {accessStatus === 'approved' ? (
+                  <span style={{ color: '#15803d' }}>
+                    {isTelugu ? 'ఆమోదించబడింది (Active Approval)' : 'Approved & Active'}
+                  </span>
+                ) : accessStatus === 'pending' ? (
+                  <span style={{ color: '#b45309' }}>
+                    {isTelugu ? 'అడ్మిన్ ఆమోదం కోసం పెండింగ్‌లో ఉంది' : 'Pending Super Admin Review'}
+                  </span>
+                ) : (
+                  <span style={{ color: '#64748b' }}>
+                    {isTelugu ? 'అనుమతి కేటాయించబడలేదు' : 'No Active Assignment'}
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
 
-        {accessStatus !== 'approved' && (
-          <Link to="/leader/voters" className="btn btn-primary btn-sm">
-            <span>{isTelugu ? 'నియోజకవర్గాన్ని ఎంచుకోండి / అభ్యర్థించండి' : 'Select / Request Access'}</span>
-          </Link>
-        )}
-      </div>
+          {accessStatus !== 'approved' && (
+            <Link to="/leader/voters" className="btn btn-primary btn-sm">
+              <span>{isTelugu ? 'నియోజకవర్గాన్ని ఎంచుకోండి / అభ్యర్థించండి' : 'Select / Request Access'}</span>
+            </Link>
+          )}
+        </div>
+      )}
 
       {/* Metrics Row */}
       {loading ? (

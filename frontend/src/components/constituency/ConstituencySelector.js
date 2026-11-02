@@ -6,7 +6,7 @@ import { MapPin, Edit3, CheckCircle2, AlertCircle, ChevronRight, Layers } from '
 
 export default function ConstituencySelector({ onSelectionConfirmed, showBannerOnly = false }) {
   const { t, i18n } = useTranslation();
-  const { user, selectedConstituency, setSelectedConstituency, refreshUserSelection } = useAuth();
+  const { user, selectedConstituency, setSelectedConstituency, refreshUserSelection, loadingSelection } = useAuth();
 
   const [districts, setDistricts] = useState([]);
   const [assemblies, setAssemblies] = useState([]);
@@ -112,6 +112,28 @@ export default function ConstituencySelector({ onSelectionConfirmed, showBannerO
       setSaving(false);
     }
   };
+
+  // While determining user selection on initial load, show a compact skeleton banner to avoid flashing the edit form
+  if (loadingSelection && !selectedConstituency) {
+    return (
+      <div className="card" style={{
+        marginBottom: '1.25rem',
+        padding: '1rem 1.25rem',
+        background: '#f8fafc',
+        border: '1px solid #e2e8f0',
+        borderRadius: '12px',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '0.75rem'
+      }}>
+        <div className="skeleton-box" style={{ width: '42px', height: '42px', borderRadius: '10px' }} />
+        <div style={{ flex: 1 }}>
+          <div className="skeleton-box" style={{ width: '130px', height: '14px', marginBottom: '8px' }} />
+          <div className="skeleton-box" style={{ width: '260px', height: '20px' }} />
+        </div>
+      </div>
+    );
+  }
 
   // If user has a saved selection and we are not in editing mode, show the active banner with "Edit Selection"
   if (selectedConstituency && !isEditing) {
