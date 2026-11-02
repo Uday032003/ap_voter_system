@@ -3,9 +3,13 @@ import { useTranslation } from 'react-i18next';
 import { api } from '../services/api.js';
 import { useAuth } from '../context/AuthContext.js';
 import ConstituencySelector from '../components/constituency/ConstituencySelector.js';
-import { VoterTableSkeleton } from '../components/common/SkeletonLoader.js';
+import { VoterCardsSkeleton } from '../components/common/SkeletonLoader.js';
 import { 
+  User,
   Users, 
+  Home,
+  Calendar,
+  UserCheck,
   Search, 
   RefreshCw, 
   ChevronLeft, 
@@ -13,6 +17,22 @@ import {
   MapPin,
   CheckCircle2
 } from 'lucide-react';
+
+function getRelativeLabel(relativeType, isTelugu) {
+  const norm = (relativeType || '').toLowerCase();
+  if (norm.includes('father')) return isTelugu ? 'తండ్రి పేరు' : "Father's Name";
+  if (norm.includes('husband')) return isTelugu ? 'భర్త పేరు' : "Husband's Name";
+  if (norm.includes('mother')) return isTelugu ? 'తల్లి పేరు' : "Mother's Name";
+  if (norm.includes('other')) return isTelugu ? 'సంరక్షకుడి పేరు' : "Guardian's Name";
+  return isTelugu ? 'బంధువు పేరు' : (relativeType ? `${relativeType}'s Name` : "Relative's Name");
+}
+
+function formatGender(gender, isTelugu) {
+  const g = (gender || '').toUpperCase();
+  if (g === 'M' || g.startsWith('MALE')) return isTelugu ? 'పురుషుడు (Male)' : 'Male';
+  if (g === 'F' || g.startsWith('FEMALE')) return isTelugu ? 'స్త్రీ (Female)' : 'Female';
+  return isTelugu ? 'ఇతర (Other)' : 'Other';
+}
 
 export default function CommonerVotersPage() {
   const { t, i18n } = useTranslation();
@@ -167,80 +187,332 @@ export default function CommonerVotersPage() {
             </form>
           </div>
 
-          {/* Roll Records */}
-          <div className="card" style={{ padding: '1.25rem', borderRadius: '16px', border: '1px solid #e2e8f0' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.5rem' }}>
-              <div style={{ fontSize: '0.9rem', color: '#475569', fontWeight: 600 }}>
-                {isTelugu ? 'రిజిస్టర్ అయిన ఓటర్లు:' : 'Registered Voters Found:'}{' '}
-                <span style={{ color: '#0f172a', fontWeight: 800 }}>{totalCount.toLocaleString()}</span>
-              </div>
-              <div style={{ fontSize: '0.82rem', color: '#64748b' }}>
-                Page {page} of {totalPages}
-              </div>
+          {/* Roll Records Cards */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem', flexWrap: 'wrap', gap: '0.5rem', padding: '0 0.25rem' }}>
+            <div style={{ fontSize: '0.9rem', color: '#475569', fontWeight: 600 }}>
+              {isTelugu ? 'రిజిస్టర్ అయిన ఓటర్లు:' : 'Registered Voters Found:'}{' '}
+              <span style={{ color: '#0f172a', fontWeight: 800 }}>{totalCount.toLocaleString()}</span>
             </div>
+            <div style={{ fontSize: '0.82rem', color: '#64748b' }}>
+              Page {page} of {totalPages}
+            </div>
+          </div>
 
-            {loading ? (
-              <VoterTableSkeleton rows={8} />
-            ) : voters.length === 0 ? (
-              <div style={{ padding: '3.5rem 1rem', textAlign: 'center', color: '#94a3b8' }}>
-                <Users size={40} style={{ opacity: 0.3, marginBottom: '0.75rem' }} />
-                <h4 style={{ margin: '0 0 0.25rem', color: '#475569' }}>
-                  {isTelugu ? 'ఓటరు రికార్డులు కనిపించలేదు' : 'No matching voter records found'}
-                </h4>
-                <p style={{ margin: 0, fontSize: '0.85rem' }}>
-                  {isTelugu ? 'శోధన పదాన్ని సరిచూసుకోండి లేదా నియోజకవర్గాన్ని మార్చండి.' : 'Verify the spelling or check another part number.'}
-                </p>
-              </div>
-            ) : (
-              <div className="table-responsive">
-                <table className="table" style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.88rem' }}>
-                  <thead>
-                    <tr style={{ borderBottom: '2px solid #e2e8f0', textAlign: 'left', background: '#f8fafc' }}>
-                      <th style={{ padding: '0.75rem' }}>{isTelugu ? 'క్రమ సంఖ్య' : 'Sl. No'}</th>
-                      <th style={{ padding: '0.75rem' }}>{isTelugu ? 'ఓటరు పేరు (తెలుగు & English)' : 'Voter Name'}</th>
-                      <th style={{ padding: '0.75rem' }}>{isTelugu ? 'బంధువు పేరు' : 'Relative Name'}</th>
-                      <th style={{ padding: '0.75rem' }}>{isTelugu ? 'ఓటరు ఐడి' : 'Voter ID (EPIC)'}</th>
-                      <th style={{ padding: '0.75rem' }}>{isTelugu ? 'డోర్ నం.' : 'House No.'}</th>
-                      <th style={{ padding: '0.75rem' }}>{isTelugu ? 'వయస్సు / లింగం' : 'Age/Sex'}</th>
-                      <th style={{ padding: '0.75rem' }}>{isTelugu ? 'పార్ట్ నం.' : 'Part'}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {voters.map((voter) => (
-                      <tr key={voter.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                        <td style={{ padding: '0.75rem', fontWeight: 700, color: '#4f46e5' }}>
-                          #{voter.serial_number}
-                        </td>
-                        <td style={{ padding: '0.75rem' }}>
-                          <div style={{ fontWeight: 700, color: '#0f172a' }}>
-                            {isTelugu && voter.name_te ? voter.name_te : voter.name_en}
+          {loading ? (
+            <VoterCardsSkeleton count={6} />
+          ) : voters.length === 0 ? (
+            <div className="card" style={{ padding: '3.5rem 1rem', textAlign: 'center', color: '#94a3b8', borderRadius: '16px' }}>
+              <Users size={40} style={{ opacity: 0.3, marginBottom: '0.75rem' }} />
+              <h4 style={{ margin: '0 0 0.25rem', color: '#475569' }}>
+                {isTelugu ? 'ఓటరు రికార్డులు కనిపించలేదు' : 'No matching voter records found'}
+              </h4>
+              <p style={{ margin: 0, fontSize: '0.85rem' }}>
+                {isTelugu ? 'శోధన పదాన్ని సరిచూసుకోండి లేదా నియోజకవర్గాన్ని మార్చండి.' : 'Verify the spelling or check another part number.'}
+              </p>
+            </div>
+          ) : (
+            <div className="voter-cards-container" style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              {voters.map((voter) => {
+                const displayName = isTelugu
+                  ? (voter.name_te || voter.name_en)
+                  : (voter.name_en || voter.name_te);
+
+                const displayRelativeName = isTelugu
+                  ? (voter.relative_name_te || voter.relative_name_en || '—')
+                  : (voter.relative_name_en || voter.relative_name_te || '—');
+
+                return (
+                  <div
+                    key={voter.id}
+                    className="commoner-voter-card"
+                    style={{
+                      background: '#ffffff',
+                      border: '1px solid #bfdbfe',
+                      borderRadius: '12px',
+                      padding: '0.55rem 0.75rem',
+                      boxShadow: '0 1px 5px rgba(191, 219, 254, 0.28)',
+                      position: 'relative',
+                      transition: 'all 0.15s ease'
+                    }}
+                  >
+                    {/* Top Header Row: Serial Number (Left) and Voter ID Pill (Right) */}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div style={{
+                        background: '#eff6ff',
+                        border: '1px solid #93c5fd',
+                        borderRadius: '5px',
+                        padding: '1px 7px',
+                        color: '#1e40af',
+                        fontWeight: 700,
+                        fontSize: '0.8rem',
+                        lineHeight: 1.3
+                      }}>
+                        {voter.serial_number}
+                      </div>
+
+                      <div style={{
+                        background: '#e0e7ff',
+                        color: '#1e1b4b',
+                        borderRadius: '5px',
+                        padding: '2px 8px',
+                        fontWeight: 800,
+                        fontSize: '0.74rem',
+                        letterSpacing: '0.3px',
+                        lineHeight: 1.3
+                      }}>
+                        {voter.voter_id || '—'}
+                      </div>
+                    </div>
+
+                    {/* Row 1: Name Box with User Icon */}
+                    <div style={{
+                      background: '#f8fafc',
+                      border: '1px solid #e2e8f0',
+                      borderRadius: '6px',
+                      padding: '0.28rem 0.5rem',
+                      marginTop: '0.4rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.45rem'
+                    }}>
+                      <div style={{
+                        width: '20px',
+                        height: '20px',
+                        minWidth: '20px',
+                        minHeight: '20px',
+                        background: '#e0f2fe',
+                        color: '#0284c7',
+                        borderRadius: '5px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        flexShrink: 0
+                      }}>
+                        <User size={12} />
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                        <span style={{ color: '#64748b', fontWeight: 600, fontSize: '0.68rem', whiteSpace: 'nowrap' }}>
+                          {isTelugu ? 'పేరు' : 'Name'} :
+                        </span>
+                        <span style={{
+                          color: '#0f172a',
+                          fontWeight: 800,
+                          fontSize: '0.76rem',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.2px',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap'
+                        }}>
+                          {displayName}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Row 2: 2-Column Grid for Relative Name & House Number */}
+                    <div style={{
+                      display: 'grid',
+                      gridTemplateColumns: '1fr 1fr',
+                      gap: '0.4rem',
+                      marginTop: '0.35rem'
+                    }}>
+                      {/* Column 1: Relative Name */}
+                      <div style={{
+                        background: '#f8fafc',
+                        border: '1px solid #e2e8f0',
+                        borderRadius: '6px',
+                        padding: '0.25rem 0.45rem',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.4rem'
+                      }}>
+                        <div style={{
+                          width: '20px',
+                          height: '20px',
+                          minWidth: '20px',
+                          minHeight: '20px',
+                          background: '#e0f2fe',
+                          color: '#0284c7',
+                          borderRadius: '5px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          flexShrink: 0
+                        }}>
+                          <Users size={12} />
+                        </div>
+                        <div style={{ minWidth: 0, flex: 1 }}>
+                          <div style={{ color: '#64748b', fontSize: '0.60rem', fontWeight: 600, lineHeight: 1.1 }}>
+                            {getRelativeLabel(voter.relative_type, isTelugu)}
                           </div>
-                          <div style={{ fontSize: '0.76rem', color: '#64748b' }}>
-                            {voter.name_en} {voter.name_te && voter.name_en !== voter.name_te ? `• ${voter.name_te}` : ''}
+                          <div style={{
+                            color: '#0f172a',
+                            fontWeight: 800,
+                            fontSize: '0.72rem',
+                            textTransform: 'uppercase',
+                            marginTop: '1px',
+                            wordBreak: 'break-word',
+                            lineHeight: 1.15
+                          }}>
+                            {displayRelativeName}
                           </div>
-                        </td>
-                        <td style={{ padding: '0.75rem', color: '#475569' }}>
-                          <div>{isTelugu && voter.relative_name_te ? voter.relative_name_te : voter.relative_name_en || '—'}</div>
-                          <div style={{ fontSize: '0.72rem', color: '#94a3b8' }}>{voter.relative_type || 'Father'}</div>
-                        </td>
-                        <td style={{ padding: '0.75rem', fontWeight: 600, color: '#0284c7' }}>
-                          {voter.voter_id || '—'}
-                        </td>
-                        <td style={{ padding: '0.75rem', color: '#475569' }}>
-                          {voter.house_number || '—'}
-                        </td>
-                        <td style={{ padding: '0.75rem', color: '#475569' }}>
-                          {voter.age || '—'} / {voter.gender || '—'}
-                        </td>
-                        <td style={{ padding: '0.75rem', color: '#64748b' }}>
-                          Part {voter.part_number}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
+                        </div>
+                      </div>
+
+                      {/* Column 2: House Number */}
+                      <div style={{
+                        background: '#f8fafc',
+                        border: '1px solid #e2e8f0',
+                        borderRadius: '6px',
+                        padding: '0.25rem 0.45rem',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.4rem'
+                      }}>
+                        <div style={{
+                          width: '20px',
+                          height: '20px',
+                          minWidth: '20px',
+                          minHeight: '20px',
+                          background: '#e0f2fe',
+                          color: '#0284c7',
+                          borderRadius: '5px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          flexShrink: 0
+                        }}>
+                          <Home size={12} />
+                        </div>
+                        <div style={{ minWidth: 0, flex: 1 }}>
+                          <div style={{ color: '#64748b', fontSize: '0.60rem', fontWeight: 600, lineHeight: 1.1 }}>
+                            {isTelugu ? 'డోర్ నంబర్' : 'House Number'}
+                          </div>
+                          <div style={{
+                            color: '#0f172a',
+                            fontWeight: 800,
+                            fontSize: '0.72rem',
+                            marginTop: '1px',
+                            lineHeight: 1.15
+                          }}>
+                            {voter.house_number || '—'}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Row 3: 2-Column Grid for Age & Gender */}
+                    <div style={{
+                      display: 'grid',
+                      gridTemplateColumns: '1fr 1fr',
+                      gap: '0.4rem',
+                      marginTop: '0.35rem'
+                    }}>
+                      {/* Column 1: Age */}
+                      <div style={{
+                        background: '#f8fafc',
+                        border: '1px solid #e2e8f0',
+                        borderRadius: '6px',
+                        padding: '0.25rem 0.45rem',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.4rem'
+                      }}>
+                        <div style={{
+                          width: '20px',
+                          height: '20px',
+                          minWidth: '20px',
+                          minHeight: '20px',
+                          background: '#e0f2fe',
+                          color: '#0284c7',
+                          borderRadius: '5px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          flexShrink: 0
+                        }}>
+                          <Calendar size={12} />
+                        </div>
+                        <div>
+                          <div style={{ color: '#64748b', fontSize: '0.60rem', fontWeight: 600, lineHeight: 1.1 }}>
+                            {isTelugu ? 'వయస్సు' : 'Age'}
+                          </div>
+                          <div style={{ color: '#0f172a', fontWeight: 800, fontSize: '0.72rem', marginTop: '1px', lineHeight: 1.15 }}>
+                            {voter.age || '—'}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Column 2: Gender */}
+                      <div style={{
+                        background: '#f8fafc',
+                        border: '1px solid #e2e8f0',
+                        borderRadius: '6px',
+                        padding: '0.25rem 0.45rem',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.4rem'
+                      }}>
+                        <div style={{
+                          width: '20px',
+                          height: '20px',
+                          minWidth: '20px',
+                          minHeight: '20px',
+                          background: '#e0f2fe',
+                          color: '#0284c7',
+                          borderRadius: '5px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          flexShrink: 0
+                        }}>
+                          <UserCheck size={12} />
+                        </div>
+                        <div>
+                          <div style={{ color: '#64748b', fontSize: '0.60rem', fontWeight: 600, lineHeight: 1.1 }}>
+                            {isTelugu ? 'లింగం' : 'Gender'}
+                          </div>
+                          <div style={{ color: '#0f172a', fontWeight: 800, fontSize: '0.72rem', marginTop: '1px', lineHeight: 1.15 }}>
+                            {formatGender(voter.gender, isTelugu)}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Bottom Footer Row with Part Info & Verified AP E-Roll Status */}
+                    <div style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      marginTop: '0.45rem',
+                      paddingTop: '0.4rem',
+                      borderTop: '1px dashed #e2e8f0'
+                    }}>
+                      <div style={{ fontSize: '0.68rem', color: '#64748b', fontWeight: 600 }}>
+                        {isTelugu ? 'పార్ట్' : 'Part'}: <strong style={{ color: '#0f172a' }}>{voter.part_number || '1'}</strong>
+                      </div>
+
+                      <div style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.25rem',
+                        fontSize: '0.68rem',
+                        fontWeight: 700,
+                        color: '#15803d',
+                        background: '#f0fdf4',
+                        padding: '2px 8px',
+                        borderRadius: '6px',
+                        border: '1px solid #bbf7d0'
+                      }}>
+                        <CheckCircle2 size={11} color="#16a34a" />
+                        <span>{isTelugu ? 'ధృవీకరించబడిన ఓటరు' : 'Verified AP E-Roll'}</span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
 
             {/* Pagination */}
             {totalPages > 1 && (
@@ -279,9 +551,8 @@ export default function CommonerVotersPage() {
                 </button>
               </div>
             )}
-          </div>
-        </>
-      )}
-    </div>
-  );
+          </>
+        )}
+      </div>
+    );
 }
