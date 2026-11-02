@@ -751,14 +751,11 @@ export default function LeaderVotersPage() {
                         }}
                       >
                         {isMarking ? (
-                          <>
-                            <RefreshCw size={11} className="spin" color="#ffffff" />
-                            <span>
-                              {isAdded
-                                ? (isTelugu ? 'తొలగిస్తోంది...' : 'Removing...')
-                                : (isTelugu ? 'చేరుస్తోంది...' : 'Adding...')}
-                            </span>
-                          </>
+                          <span>
+                            {isAdded
+                              ? (isTelugu ? 'తొలగిస్తోంది...' : 'Removing...')
+                              : (isTelugu ? 'చేరుస్తోంది...' : 'Adding...')}
+                          </span>
                         ) : isAdded ? (
                           <span>{isTelugu ? 'తొలగించండి' : 'Remove'}</span>
                         ) : (
