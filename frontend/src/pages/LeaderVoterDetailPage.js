@@ -210,6 +210,19 @@ export default function LeaderVoterDetailPage() {
               Part #{voter.part_number} • Serial #{voter.serial_number}
             </div>
           </div>
+          <div>
+            <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 600, textTransform: 'uppercase' }}>
+              {isTelugu ? 'విభాగం పేరు' : 'Section Name'}
+            </div>
+            <div style={{ fontSize: '1rem', fontWeight: 600, color: '#0f172a', marginTop: '0.2rem' }}>
+              {isTelugu && voter.section_name_te ? voter.section_name_te : voter.section_name_en || '—'}
+            </div>
+            <div style={{ fontSize: '0.82rem', color: '#64748b' }}>
+              {voter.section_name_en && voter.section_name_te && voter.section_name_en !== voter.section_name_te
+                ? (isTelugu ? voter.section_name_en : voter.section_name_te)
+                : ''}
+            </div>
+          </div>
         </div>
 
         <div style={{ marginTop: '2rem', padding: '0.85rem 1rem', background: '#f8fafc', borderRadius: '10px', border: '1px solid #e2e8f0', fontSize: '0.82rem', color: '#64748b' }}>

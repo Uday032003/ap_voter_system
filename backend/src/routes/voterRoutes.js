@@ -119,7 +119,9 @@ router.put('/:id', authMiddleware, requireRoles('super_admin'), async (req, res,
       gender: z.enum(['M', 'F', 'O', 'Male', 'Female', 'Other']).optional(),
       part_number: z.string().optional(),
       voter_id: z.string().optional(),
-      serial_number: z.number().int().optional()
+      serial_number: z.number().int().optional(),
+      section_name_en: z.string().optional().nullable(),
+      section_name_te: z.string().optional().nullable()
     });
 
     const updates = schema.parse(req.body);

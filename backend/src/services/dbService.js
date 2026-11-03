@@ -829,6 +829,8 @@ export const dbService = {
 
       const dataRes = await pool.query(`
         SELECT v.*,
+               v.section_name_en,
+               v.section_name_te,
                lav.id as added_id, lav.notes as added_notes, lav.created_at as added_at,
                true as is_added, true as is_marked
         FROM leader_added_voters lav
@@ -933,6 +935,8 @@ export const dbService = {
 
       const dataQuery = `
         SELECT v.*,
+               v.section_name_en,
+               v.section_name_te,
                ${leaderSelect}
         FROM voters v
         ${leaderJoin}
@@ -960,6 +964,8 @@ export const dbService = {
     if (hasPool()) {
       const { rows } = await pool.query(`
         SELECT v.*,
+               v.section_name_en,
+               v.section_name_te,
                m.name_en as constituency_name_en, m.name_te as constituency_name_te,
                a.name_en as assembly_name_en, a.name_te as assembly_name_te,
                d.name_en as district_name_en, d.name_te as district_name_te
@@ -992,7 +998,7 @@ export const dbService = {
     if (hasPool()) {
       const allowed = [
         'name_en', 'name_te', 'relative_type', 'relative_name_en', 'relative_name_te',
-        'house_number', 'age', 'gender', 'part_number', 'voter_id', 'serial_number'
+        'house_number', 'age', 'gender', 'part_number', 'voter_id', 'serial_number', 'section_name_en', 'section_name_te'
       ];
       const setClauses = [];
       const values = [];
@@ -1097,6 +1103,8 @@ export const dbService = {
             age: parseInt(row.age, 10) || null,
             gender: (row.gender || 'M').toUpperCase().startsWith('F') ? 'F' : ((row.gender || 'M').toUpperCase().startsWith('O') ? 'O' : 'M'),
             part_number: partNumber,
+            section_name_en: (row.section_name_en || row.section_name || '').trim() || null,
+            section_name_te: (row.section_name_te || '').trim() || null,
             is_public_approved: true
           });
         }
@@ -1158,6 +1166,8 @@ export const dbService = {
               house_number = COALESCE(EXCLUDED.house_number, voters.house_number),
               age = COALESCE(EXCLUDED.age, voters.age),
               gender = COALESCE(EXCLUDED.gender, voters.gender),
+                section_name_en = COALESCE(EXCLUDED.section_name_en, voters.section_name_en),
+                section_name_te = COALESCE(EXCLUDED.section_name_te, voters.section_name_te),
               updated_at = NOW()
           `, [
             mptcConstituencyId,
@@ -1172,7 +1182,9 @@ export const dbService = {
             row.age,
             row.gender,
             row.part_number,
-            importId
+            importId,
+            row.section_name_en || null,
+            row.section_name_te || null
           ]);
         }
 

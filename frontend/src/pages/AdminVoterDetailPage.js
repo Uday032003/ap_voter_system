@@ -51,7 +51,9 @@ export default function AdminVoterDetailPage() {
           age: res.data.age || '',
           gender: res.data.gender || 'M',
           part_number: res.data.part_number || '1',
-          serial_number: res.data.serial_number || ''
+          serial_number: res.data.serial_number || '',
+          section_name_en: res.data.section_name_en || '',
+          section_name_te: res.data.section_name_te || ''
         });
       } else {
         setError('Voter record not found.');
@@ -335,6 +337,32 @@ export default function AdminVoterDetailPage() {
                   required
                 />
               </div>
+              <div className="form-group">
+                <label style={{ fontSize: '0.85rem', fontWeight: 600, display: 'block', marginBottom: '0.35rem' }}>
+                  Section Name (English)
+                </label>
+                <input
+                  type="text"
+                  name="section_name_en"
+                  className="form-control"
+                  value={formData.section_name_en || ''}
+                  onChange={handleInputChange}
+                />
+              </div>
+
+              <div className="form-group">
+                <label style={{ fontSize: '0.85rem', fontWeight: 600, display: 'block', marginBottom: '0.35rem' }}>
+                  Section Name (Telugu - విభాగం పేరు)
+                </label>
+                <input
+                  type="text"
+                  name="section_name_te"
+                  className="form-control"
+                  value={formData.section_name_te || ''}
+                  onChange={handleInputChange}
+                />
+              </div>
+
             </div>
 
             <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end', borderTop: '1px solid #f1f5f9', paddingTop: '1.25rem' }}>
@@ -416,6 +444,19 @@ export default function AdminVoterDetailPage() {
               </div>
               <div style={{ fontSize: '1rem', fontWeight: 600, color: '#0f172a', marginTop: '0.2rem' }}>
                 Part #{voter.part_number} • Serial #{voter.serial_number}
+              </div>
+            </div>
+            <div>
+              <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 600, textTransform: 'uppercase' }}>
+                {isTelugu ? 'విభాగం పేరు' : 'Section Name'}
+              </div>
+              <div style={{ fontSize: '1rem', fontWeight: 600, color: '#0f172a', marginTop: '0.2rem' }}>
+                {isTelugu && voter.section_name_te ? voter.section_name_te : voter.section_name_en || '—'}
+              </div>
+              <div style={{ fontSize: '0.82rem', color: '#64748b' }}>
+                {voter.section_name_en && voter.section_name_te && voter.section_name_en !== voter.section_name_te
+                  ? (isTelugu ? voter.section_name_en : voter.section_name_te)
+                  : ''}
               </div>
             </div>
           </div>

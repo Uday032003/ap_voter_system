@@ -276,6 +276,10 @@ export default function AdminVotersPage() {
               ? (voter.relative_name_te || voter.relative_name_en || '—')
               : (voter.relative_name_en || voter.relative_name_te || '—');
 
+                const displaySectionName = isTelugu
+                  ? (voter.section_name_te || voter.section_name_en)
+                  : (voter.section_name_en || voter.section_name_te);
+
             return (
               <div
                 key={voter.id}
@@ -291,7 +295,7 @@ export default function AdminVotersPage() {
                 }}
               >
                 {/* Top Header Row: Serial Number (Left) and Voter ID Pill (Right) */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.45rem' }}>
                   <div style={{
                     background: '#eff6ff',
                     border: '1px solid #93c5fd',
@@ -300,12 +304,33 @@ export default function AdminVotersPage() {
                     color: '#1e40af',
                     fontWeight: 700,
                     fontSize: '0.8rem',
-                    lineHeight: 1.3
+                    lineHeight: 1.3,
+                        flexShrink: 0
                   }}>
                     {voter.serial_number}
                   </div>
 
-                  <div style={{
+                                        {displaySectionName && (
+                        <div
+                          style={{
+                            fontSize: '0.58rem',
+                            color: '#64748b',
+                            fontWeight: 600,
+                            textAlign: 'center',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
+                            minWidth: 0,
+                            flex: 1,
+                            padding: '0 0.25rem'
+                          }}
+                          title={displaySectionName}
+                        >
+                          {displaySectionName}
+                        </div>
+                      )}
+
+                      <div style={{
                     background: '#e0e7ff',
                     color: '#1e1b4b',
                     borderRadius: '5px',
@@ -313,7 +338,8 @@ export default function AdminVotersPage() {
                     fontWeight: 800,
                     fontSize: '0.74rem',
                     letterSpacing: '0.3px',
-                    lineHeight: 1.3
+                    lineHeight: 1.3,
+                        flexShrink: 0
                   }}>
                     {voter.voter_id || '—'}
                   </div>
@@ -534,7 +560,7 @@ export default function AdminVotersPage() {
                   </div>
                 </div>
 
-                {/* Bottom Footer Row with Part Info & View/Edit Action */}
+{/* Bottom Footer Row with Part Info & View/Edit Action */}
                 <div style={{
                   display: 'flex',
                   justifyContent: 'space-between',
