@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { api } from '../services/api.js';
 import { useAuth } from '../context/AuthContext.js';
@@ -15,7 +15,8 @@ import {
   ChevronLeft, 
   ChevronRight,
   MapPin,
-  CheckCircle2
+  CheckCircle2,
+  ArrowUp
 } from 'lucide-react';
 
 function getRelativeLabel(relativeType, isTelugu) {
@@ -43,6 +44,10 @@ export default function CommonerVotersPage() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [showScrollTop, setShowScrollTop] = useState(false);
+  const sentinelRef = useRef(null);
+
   const [error, setError] = useState(null);
 
   const [search, setSearch] = useState('');
@@ -50,6 +55,60 @@ export default function CommonerVotersPage() {
   const [partNumber, setPartNumber] = useState('');
 
   const isTelugu = i18n.language === 'te';
+
+  
+  useEffect(() => {
+    const handleScroll = () => setShowScrollTop(window.scrollY > 400);
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const loadMoreCommonerVoters = async () => {
+    if (loading || loadingMore || page >= totalPages) return;
+    const cid = selectedConstituency?.id;
+    if (!cid) return;
+
+    try {
+      setLoadingMore(true);
+      const nextPage = page + 1;
+      const params = {
+        constituencyId: cid,
+        page: nextPage,
+        limit: 25
+      };
+      if (search.trim()) params.search = search.trim();
+      if (gender) params.gender = gender;
+      if (partNumber.trim()) params.partNumber = partNumber.trim();
+
+      const res = await api.getVoters(params);
+      if (res.success && res.records) {
+        setVoters(prev => {
+          const ids = new Set(prev.map(v => v.id));
+          const fresh = res.records.filter(v => !ids.has(v.id));
+          return [...prev, ...fresh];
+        });
+        setPage(nextPage);
+        setTotalPages(res.totalPages || 1);
+        setTotalCount(res.totalCount || 0);
+      }
+    } catch (err) {
+      console.warn('Failed to load next page of public voters:', err);
+    } finally {
+      setLoadingMore(false);
+    }
+  };
+
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+    const observer = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting && !loading && !loadingMore && page < totalPages) {
+        loadMoreCommonerVoters();
+      }
+    }, { threshold: 0.1, rootMargin: '250px' });
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [loading, loadingMore, page, totalPages, selectedConstituency?.id, search, gender, partNumber]);
 
   const fetchVoters = async (targetPage = 1, constituencyId = selectedConstituency?.id) => {
     if (!constituencyId) return;
@@ -514,43 +573,69 @@ export default function CommonerVotersPage() {
             </div>
           )}
 
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <div style={{
-                display: 'flex',
-                justifyContent: 'space-between',
+            {/* Infinite Scroll Sentinel */}
+          <div ref={sentinelRef} style={{ height: '20px', margin: '0.5rem 0' }} />
+
+          {/* Loading Next Batch Indicator */}
+          {loadingMore && (
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '0.5rem',
+              padding: '1.25rem',
+              color: '#15803d',
+              fontWeight: 600,
+              fontSize: '0.85rem'
+            }}>
+              <RefreshCw size={16} className="spin" />
+              <span>{isTelugu ? 'తదుపరి 25 ఓటర్లను లోడ్ చేస్తోంది...' : 'Loading next 25 voters...'}</span>
+            </div>
+          )}
+
+          {/* End of List Indicator */}
+          {!loading && !loadingMore && page >= totalPages && voters.length > 0 && (
+            <div style={{
+              textAlign: 'center',
+              padding: '1.5rem 1rem',
+              color: '#64748b',
+              fontSize: '0.82rem',
+              fontWeight: 600
+            }}>
+              ✓ {isTelugu ? `మొత్తం ${totalCount.toLocaleString()} ఓటర్లు లోడ్ చేయబడ్డాయి` : `All ${totalCount.toLocaleString()} voters loaded`}
+            </div>
+          )}
+
+          {/* Floating Back-to-Top Button */}
+          {showScrollTop && (
+            <button
+              type="button"
+              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+              style={{
+                position: 'fixed',
+                bottom: '72px',
+                right: '18px',
+                zIndex: 900,
+                background: '#15803d',
+                color: '#ffffff',
+                border: 'none',
+                borderRadius: '24px',
+                padding: '0.5rem 0.9rem',
+                fontSize: '0.78rem',
+                fontWeight: 700,
+                display: 'inline-flex',
                 alignItems: 'center',
-                marginTop: '1.25rem',
-                paddingTop: '1rem',
-                borderTop: '1px solid #f1f5f9'
-              }}>
-                <button
-                  type="button"
-                  className="btn btn-secondary btn-sm"
-                  disabled={page <= 1 || loading}
-                  onClick={() => fetchVoters(page - 1)}
-                  style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}
-                >
-                  <ChevronLeft size={16} />
-                  <span>Previous</span>
-                </button>
-
-                <span style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: 600 }}>
-                  Page {page} of {totalPages}
-                </span>
-
-                <button
-                  type="button"
-                  className="btn btn-secondary btn-sm"
-                  disabled={page >= totalPages || loading}
-                  onClick={() => fetchVoters(page + 1)}
-                  style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}
-                >
-                  <span>Next</span>
-                  <ChevronRight size={16} />
-                </button>
-              </div>
-            )}
+                gap: '0.35rem',
+                boxShadow: '0 4px 14px rgba(21, 128, 61, 0.35)',
+                cursor: 'pointer',
+                transition: 'transform 0.15s ease'
+              }}
+              title={isTelugu ? 'పైకి స్క్రోల్ చేయండి' : 'Back to top'}
+            >
+              <ArrowUp size={15} />
+              <span>{isTelugu ? 'పైకి' : 'Top'}</span>
+            </button>
+          )}
           </>
         )}
       </div>

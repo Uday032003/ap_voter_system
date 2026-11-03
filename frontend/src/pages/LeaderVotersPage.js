@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { api } from '../services/api.js';
@@ -20,7 +20,8 @@ import {
   RefreshCw, 
   ChevronLeft, 
   ChevronRight,
-  Eye
+  Eye,
+  ArrowUp
 } from 'lucide-react';
 
 function getRelativeLabel(relativeType, isTelugu) {
@@ -75,6 +76,10 @@ export default function LeaderVotersPage() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [loadingVoters, setLoadingVoters] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [showScrollTop, setShowScrollTop] = useState(false);
+  const sentinelRef = useRef(null);
+
   const [search, setSearch] = useState('');
   const [gender, setGender] = useState('');
   const [partNumber, setPartNumber] = useState('');
@@ -93,6 +98,65 @@ export default function LeaderVotersPage() {
   const isTelugu = i18n.language === 'te';
 
   const activeConstituencyId = selectedConstituency?.id || dashboardStats?.constituency?.id;
+
+  
+  // Scroll listener for floating Back-to-Top pill
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowScrollTop(window.scrollY > 400);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const loadMoreVoters = async () => {
+    if (loadingVoters || loadingMore || page >= totalPages) return;
+    const targetId = activeConstituencyId;
+    if (!targetId) return;
+
+    try {
+      setLoadingMore(true);
+      const nextPage = page + 1;
+      const params = {
+        constituencyId: targetId,
+        page: nextPage,
+        limit: 25
+      };
+      if (search.trim()) params.search = search.trim();
+      if (gender) params.gender = gender;
+      if (partNumber.trim()) params.partNumber = partNumber.trim();
+
+      const res = await api.getVoters(params);
+      if (res.success && res.records) {
+        setVoters(prev => {
+          const existingIds = new Set(prev.map(v => v.id));
+          const fresh = res.records.filter(v => !existingIds.has(v.id));
+          return [...prev, ...fresh];
+        });
+        setPage(nextPage);
+        setTotalPages(res.totalPages || 1);
+        setTotalCount(res.totalCount || 0);
+      }
+    } catch (err) {
+      console.warn('Failed to load next page of voters:', err);
+    } finally {
+      setLoadingMore(false);
+    }
+  };
+
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+
+    const observer = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting && !loadingVoters && !loadingMore && page < totalPages) {
+        loadMoreVoters();
+      }
+    }, { threshold: 0.1, rootMargin: '250px' });
+
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [loadingVoters, loadingMore, page, totalPages, activeConstituencyId, search, gender, partNumber]);
 
   const loadVoters = async (targetPage = 1, constituencyId = activeConstituencyId) => {
     const targetId = constituencyId || activeConstituencyId;
@@ -769,44 +833,68 @@ export default function LeaderVotersPage() {
             </div>
           )}
 
-          {/* Pagination */}
-          {totalPages > 1 && (
+          {/* Infinite Scroll Sentinel */}
+          <div ref={sentinelRef} style={{ height: '20px', margin: '0.5rem 0' }} />
+
+          {/* Loading Next Batch Indicator */}
+          {loadingMore && (
             <div style={{
               display: 'flex',
-              justifyContent: 'space-between',
               alignItems: 'center',
-              marginTop: '1.5rem',
-              padding: '1rem',
-              background: '#ffffff',
-              borderRadius: '14px',
-              border: '1px solid #e2e8f0'
+              justifyContent: 'center',
+              gap: '0.5rem',
+              padding: '1.25rem',
+              color: '#15803d',
+              fontWeight: 600,
+              fontSize: '0.85rem'
             }}>
-              <button
-                type="button"
-                className="btn btn-secondary btn-sm"
-                disabled={page <= 1 || loadingVoters}
-                onClick={() => loadVoters(page - 1)}
-                style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}
-              >
-                <ChevronLeft size={16} />
-                <span>{isTelugu ? 'మునుపటిది' : 'Previous'}</span>
-              </button>
-
-              <span style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: 600 }}>
-                Page {page} of {totalPages}
-              </span>
-
-              <button
-                type="button"
-                className="btn btn-secondary btn-sm"
-                disabled={page >= totalPages || loadingVoters}
-                onClick={() => loadVoters(page + 1)}
-                style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}
-              >
-                <span>{isTelugu ? 'తదుపరిది' : 'Next'}</span>
-                <ChevronRight size={16} />
-              </button>
+              <RefreshCw size={16} className="spin" />
+              <span>{isTelugu ? 'తదుపరి 25 ఓటర్లను లోడ్ చేస్తోంది...' : 'Loading next 25 voters...'}</span>
             </div>
+          )}
+
+          {/* End of List Indicator */}
+          {!loadingVoters && !loadingMore && page >= totalPages && voters.length > 0 && (
+            <div style={{
+              textAlign: 'center',
+              padding: '1.5rem 1rem',
+              color: '#64748b',
+              fontSize: '0.82rem',
+              fontWeight: 600
+            }}>
+              ✓ {isTelugu ? `మొత్తం ${totalCount.toLocaleString()} ఓటర్లు లోడ్ చేయబడ్డాయి` : `All ${totalCount.toLocaleString()} voters loaded`}
+            </div>
+          )}
+
+          {/* Floating Back-to-Top Button */}
+          {showScrollTop && (
+            <button
+              type="button"
+              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+              style={{
+                position: 'fixed',
+                bottom: '72px',
+                right: '18px',
+                zIndex: 900,
+                background: '#15803d',
+                color: '#ffffff',
+                border: 'none',
+                borderRadius: '24px',
+                padding: '0.5rem 0.9rem',
+                fontSize: '0.78rem',
+                fontWeight: 700,
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.35rem',
+                boxShadow: '0 4px 14px rgba(21, 128, 61, 0.35)',
+                cursor: 'pointer',
+                transition: 'transform 0.15s ease'
+              }}
+              title={isTelugu ? 'పైకి స్క్రోల్ చేయండి' : 'Back to top'}
+            >
+              <ArrowUp size={15} />
+              <span>{isTelugu ? 'పైకి' : 'Top'}</span>
+            </button>
           )}
         </>
       )}
