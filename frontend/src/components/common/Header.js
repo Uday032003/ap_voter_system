@@ -68,7 +68,7 @@ export default function Header() {
           <Link to={homeLink} className="brand-wrapper" title="AP Voter Directory" aria-label="AP Voter Directory">
             <div className="brand-emblem">
               <img
-                src="/ap-map-theme.jpg"
+                src="/ap-map-theme.png"
                 alt="Andhra Pradesh Voter Directory"
                 className="brand-logo-img"
               />
